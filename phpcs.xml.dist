@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<ruleset name="WordPress Event Dispatcher MU Plugin">
+    <description>
+        WordPress and security-focused coding standard audit for the WordPress event dispatcher MU plugin.
+        Auto-formatting stays in PHP CS Fixer; PHPCS enforces the Inpsyde standard.
+    </description>
+
+    <arg name="colors"/>
+    <arg value="sp"/>
+    <arg name="basepath" value="."/>
+
+    <config name="testVersion" value="8.5-"/>
+    <config name="text_domain" value="event-dispatcher"/>
+
+    <file>event-dispatcher.php</file>
+    <file>src</file>
+
+    <exclude-pattern>vendor/*</exclude-pattern>
+    <exclude-pattern>.phpunit.cache/*</exclude-pattern>
+    <exclude-pattern>.hooktest.php</exclude-pattern>
+
+    <rule ref="Inpsyde">
+        <exclude name="Inpsyde.CodeQuality.NoAccessors"/>
+        <exclude name="WordPress.PHP.DevelopmentFunctions.error_log_trigger_error"/>
+        <exclude name="WordPress.PHP.POSIXFunctions"/>
+    </rule>
+
+    <rule ref="Inpsyde.CodeQuality.Psr4">
+        <properties>
+            <property name="psr4" type="array">
+                <element key="SymPress\EventDispatcher" value="src"/>
+            </property>
+        </properties>
+    </rule>
+</ruleset>
