@@ -1,0 +1,33 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: false
+
+    SymPress\EventDispatcher\Application\EventSystem:
+        factory: ['SymPress\EventDispatcher\Application\EventSystem', 'getInstance']
+        public: true
+
+    SymPress\EventDispatcher\Dispatcher\HookEventDispatcher:
+        factory: ['@SymPress\EventDispatcher\Application\EventSystem', 'getDispatcher']
+        public: true
+
+    SymPress\EventDispatcher\Contract\EventDispatcherInterface:
+        alias: SymPress\EventDispatcher\Dispatcher\HookEventDispatcher
+        public: true
+
+    Psr\EventDispatcher\EventDispatcherInterface:
+        alias: SymPress\EventDispatcher\Dispatcher\HookEventDispatcher
+        public: true
+
+    Psr\EventDispatcher\ListenerProviderInterface:
+        alias: SymPress\EventDispatcher\Dispatcher\HookEventDispatcher
+        public: true
+
+    SymPress\EventDispatcher\Contract\ListenerRegistryInterface:
+        alias: SymPress\EventDispatcher\Dispatcher\HookEventDispatcher
+        public: true
+
+    SymPress\EventDispatcher\Hook\EventSystemBootstrap:
+        tags:
+            - { name: kernel.hook, hook: 'muplugins_loaded', method: initialize, priority: 1 }
