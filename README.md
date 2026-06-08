@@ -380,3 +380,7 @@ composer test
 composer cs:analyze
 composer cs
 ```
+
+## License
+
+This package is licensed under `GPL-2.0-or-later`.
