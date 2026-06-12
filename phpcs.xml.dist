@@ -2,7 +2,7 @@
 <ruleset name="WordPress Event Dispatcher MU Plugin">
     <description>
         WordPress and security-focused coding standard audit for the WordPress event dispatcher MU plugin.
-        Auto-formatting stays in PHP CS Fixer; PHPCS enforces the Inpsyde standard.
+        Auto-formatting stays in PHP CS Fixer; PHPCS enforces the SymPress standard.
     </description>
 
     <arg name="colors"/>
@@ -19,13 +19,18 @@
     <exclude-pattern>.phpunit.cache/*</exclude-pattern>
     <exclude-pattern>.hooktest.php</exclude-pattern>
 
-    <rule ref="Inpsyde">
-        <exclude name="Inpsyde.CodeQuality.NoAccessors"/>
+    <rule ref="SymPress-WordPress">
+        <exclude name="SymPress.Classes.AccessorNaming"/>
         <exclude name="WordPress.PHP.DevelopmentFunctions.error_log_trigger_error"/>
         <exclude name="WordPress.PHP.POSIXFunctions"/>
+        <exclude name="SlevomatCodingStandard.Classes.ForbiddenPublicProperty.ForbiddenPublicProperty" />
+        <exclude name="SlevomatCodingStandard.Commenting.InlineDocCommentDeclaration.NoAssignment" />
+        <exclude name="SlevomatCodingStandard.Namespaces.ReferenceUsedNamesOnly.ReferenceViaFullyQualifiedName" />
+        <exclude name="SlevomatCodingStandard.Operators.RequireOnlyStandaloneIncrementAndDecrementOperators.PostIncrementOperatorNotUsedStandalone" />
+        <exclude name="SymPress.Variables.RedundantAssignment.Found" />
     </rule>
 
-    <rule ref="Inpsyde.CodeQuality.Psr4">
+    <rule ref="SymPress.Namespaces.Psr4">
         <properties>
             <property name="psr4" type="array">
                 <element key="SymPress\EventDispatcher" value="src"/>
