@@ -8,15 +8,9 @@ use SymPress\EventDispatcher\Contract\HookEventInterface;
 
 abstract readonly class AbstractHookEvent extends AbstractEvent implements HookEventInterface
 {
-    /** @var list<mixed> */
-    private array $arguments;
-
-    /**
-     * @param list<mixed> $arguments
-     */
-    protected function __construct(array $arguments)
+    /** @param list<mixed> $arguments */
+    protected function __construct(private array $arguments)
     {
-        $this->arguments = $arguments;
     }
 
     #[\Override]
@@ -25,9 +19,7 @@ abstract readonly class AbstractHookEvent extends AbstractEvent implements HookE
         return 10;
     }
 
-    /**
-     * @return list<mixed>
-     */
+    /** @return list<mixed> */
     public function arguments(): array
     {
         return $this->arguments;
