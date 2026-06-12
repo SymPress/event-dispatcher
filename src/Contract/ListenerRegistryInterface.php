@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace SymPress\EventDispatcher\Contract;
 
-interface ListenerRegistryInterface extends EventDispatcherInterface, \Psr\EventDispatcher\ListenerProviderInterface
+use Psr\EventDispatcher\ListenerProviderInterface;
+
+interface ListenerRegistryInterface extends EventDispatcherInterface, ListenerProviderInterface
 {
     public function register(object $service): void;
 
@@ -18,9 +20,7 @@ interface ListenerRegistryInterface extends EventDispatcherInterface, \Psr\Event
 
     public function removeSubscriber(EventSubscriberInterface $subscriber): void;
 
-    /**
-     * @return array<string, list<\Closure>>|list<\Closure>
-     */
+    /** @return array<string, list<\Closure>>|list<\Closure> */
     public function getListeners(?string $eventName = null): array;
 
     public function hasListeners(?string $eventName = null): bool;

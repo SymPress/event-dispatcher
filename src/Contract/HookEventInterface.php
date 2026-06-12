@@ -16,9 +16,7 @@ interface HookEventInterface
 
     public static function hookPriority(): int;
 
-    /**
-     * @param list<mixed> $arguments
-     */
+    /** @param list<mixed> $arguments */
     public static function fromHookArguments(array $arguments): static;
 
     public function toHookResult(): mixed;
