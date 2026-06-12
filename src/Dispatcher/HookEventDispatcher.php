@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace SymPress\EventDispatcher\Dispatcher;
 
+use Psr\EventDispatcher\StoppableEventInterface;
 use SymPress\EventDispatcher\Contract\EventSubscriberInterface;
 use SymPress\EventDispatcher\Contract\HookEventInterface;
 use SymPress\EventDispatcher\Contract\ListenerRegistryInterface;
 use SymPress\EventDispatcher\Event\HookType;
 use SymPress\EventDispatcher\Exception\InvalidHookEvent;
-use Psr\EventDispatcher\StoppableEventInterface;
 
 final class HookEventDispatcher implements ListenerRegistryInterface
 {
@@ -70,9 +70,7 @@ final class HookEventDispatcher implements ListenerRegistryInterface
         return $this->dispatcher->dispatch($event);
     }
 
-    /**
-     * @return array<string, list<\Closure>>|list<\Closure>
-     */
+    /** @return array<string, list<\Closure>>|list<\Closure> */
     #[\Override]
     public function getListeners(?string $eventName = null): array
     {
@@ -85,9 +83,7 @@ final class HookEventDispatcher implements ListenerRegistryInterface
         return $this->dispatcher->hasListeners($eventName);
     }
 
-    /**
-     * @return iterable<\Closure(object): mixed>
-     */
+    /** @return iterable<\Closure(object): mixed> */
     #[\Override]
     public function getListenersForEvent(object $event): iterable
     {
@@ -109,17 +105,17 @@ final class HookEventDispatcher implements ListenerRegistryInterface
 
             $result = ($listenerMetadata->listener)($event);
 
-            if ($result instanceof $eventClass) {
-                $event = $result;
+            if (!($result instanceof $eventClass)) {
+                continue;
             }
+
+            $event = $result;
         }
 
         return $event->toHookResult();
     }
 
-    /**
-     * @return list<class-string<HookEventInterface>>
-     */
+    /** @return list<class-string<HookEventInterface>> */
     public function registeredHookEvents(): array
     {
         return array_keys($this->registeredHookEvents);
@@ -161,9 +157,7 @@ final class HookEventDispatcher implements ListenerRegistryInterface
         $this->registeredHookEvents[$eventName] = true;
     }
 
-    /**
-     * @param class-string<HookEventInterface> $eventClass
-     */
+    /** @param class-string<HookEventInterface> $eventClass */
     private function createHookCallback(string $eventClass): \Closure
     {
         return function (mixed ...$arguments) use ($eventClass): mixed {
@@ -171,9 +165,7 @@ final class HookEventDispatcher implements ListenerRegistryInterface
         };
     }
 
-    /**
-     * @param class-string<HookEventInterface> $eventClass
-     */
+    /** @param class-string<HookEventInterface> $eventClass */
     private function assertValidHookEvent(string $eventClass): void
     {
         if ($eventClass::hookName() === '') {

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace SymPress\EventDispatcher\Dispatcher;
 
+use Psr\EventDispatcher\StoppableEventInterface;
 use SymPress\EventDispatcher\Contract\EventSubscriberInterface;
 use SymPress\EventDispatcher\Contract\ListenerRegistryInterface;
 use SymPress\EventDispatcher\Exception\InvalidListenerConfiguration;
 use SymPress\EventDispatcher\Value\ListenerDefinition;
-use Psr\EventDispatcher\StoppableEventInterface;
 
 final class EventDispatcher implements ListenerRegistryInterface
 {
@@ -124,9 +124,7 @@ final class EventDispatcher implements ListenerRegistryInterface
         return $event;
     }
 
-    /**
-     * @return array<string, list<\Closure>>|list<\Closure>
-     */
+    /** @return array<string, list<\Closure>>|list<\Closure> */
     #[\Override]
     public function getListeners(?string $eventName = null): array
     {
@@ -139,9 +137,7 @@ final class EventDispatcher implements ListenerRegistryInterface
         return $this->listenerProvider->hasListeners($eventName);
     }
 
-    /**
-     * @return iterable<\Closure(object): mixed>
-     */
+    /** @return iterable<\Closure(object): mixed> */
     #[\Override]
     public function getListenersForEvent(object $event): iterable
     {

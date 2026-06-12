@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace SymPress\EventDispatcher\Dispatcher;
 
-use SymPress\EventDispatcher\Value\ListenerMetadata;
 use Psr\EventDispatcher\ListenerProviderInterface;
+use SymPress\EventDispatcher\Value\ListenerMetadata;
 
 final class ListenerProvider implements ListenerProviderInterface
 {
@@ -75,9 +75,7 @@ final class ListenerProvider implements ListenerProviderInterface
         $this->resolvedListeners = [];
     }
 
-    /**
-     * @return list<ListenerMetadata>
-     */
+    /** @return list<ListenerMetadata> */
     public function listenerMetadataForType(string $eventName): array
     {
         if (!isset($this->listenersByType[$eventName])) {
@@ -87,9 +85,7 @@ final class ListenerProvider implements ListenerProviderInterface
         return $this->listenersByType[$eventName];
     }
 
-    /**
-     * @return list<ListenerMetadata>
-     */
+    /** @return list<ListenerMetadata> */
     public function listenerMetadataForEvent(object $event): array
     {
         $eventClass = $event::class;
@@ -101,9 +97,7 @@ final class ListenerProvider implements ListenerProviderInterface
         return $this->resolvedListeners[$eventClass];
     }
 
-    /**
-     * @return array<string, list<\Closure>>|list<\Closure>
-     */
+    /** @return array<string, list<\Closure>>|list<\Closure> */
     public function getListeners(?string $eventName = null): array
     {
         if ($eventName !== null) {
@@ -119,9 +113,7 @@ final class ListenerProvider implements ListenerProviderInterface
         return $listeners;
     }
 
-    /**
-     * @return iterable<\Closure(object): mixed>
-     */
+    /** @return iterable<\Closure(object): mixed> */
     #[\Override]
     public function getListenersForEvent(object $event): iterable
     {
@@ -140,9 +132,7 @@ final class ListenerProvider implements ListenerProviderInterface
         return $this->listeners !== [];
     }
 
-    /**
-     * @return list<ListenerMetadata>
-     */
+    /** @return list<ListenerMetadata> */
     private function sortTypeListeners(string $eventName): array
     {
         $listenersByPriority = $this->listeners[$eventName] ?? [];
@@ -164,9 +154,7 @@ final class ListenerProvider implements ListenerProviderInterface
         return $sortedListeners;
     }
 
-    /**
-     * @return list<\Closure>
-     */
+    /** @return list<\Closure> */
     private function closuresForType(string $eventName): array
     {
         return array_map(
@@ -175,9 +163,7 @@ final class ListenerProvider implements ListenerProviderInterface
         );
     }
 
-    /**
-     * @return list<ListenerMetadata>
-     */
+    /** @return list<ListenerMetadata> */
     private function resolveListenersForEvent(object $event): array
     {
         $listeners = [];
@@ -197,9 +183,7 @@ final class ListenerProvider implements ListenerProviderInterface
         return $listeners;
     }
 
-    /**
-     * @return list<string>
-     */
+    /** @return list<string> */
     private function eventTypes(object $event): array
     {
         $types = [$event::class];

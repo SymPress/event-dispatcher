@@ -14,9 +14,7 @@ use SymPress\EventDispatcher\Value\ListenerDefinition;
 
 final class ListenerDefinitionResolver
 {
-    /**
-     * @return list<ListenerDefinition>
-     */
+    /** @return list<ListenerDefinition> */
     public function resolve(object $service): array
     {
         $definitions = [];
@@ -34,9 +32,7 @@ final class ListenerDefinitionResolver
         return array_values($definitions);
     }
 
-    /**
-     * @return list<ListenerDefinition>
-     */
+    /** @return list<ListenerDefinition> */
     private function resolveSubscriberDefinitions(EventSubscriberInterface $subscriber): array
     {
         $definitions = [];
@@ -56,9 +52,7 @@ final class ListenerDefinitionResolver
         return $definitions;
     }
 
-    /**
-     * @return list<ListenerDefinition>
-     */
+    /** @return list<ListenerDefinition> */
     private function normalizeConfiguration(string $eventName, mixed $configuration): array
     {
         if (is_string($configuration) && $configuration !== '') {
@@ -106,17 +100,13 @@ final class ListenerDefinitionResolver
         return $definitions;
     }
 
-    /**
-     * @param array<int, mixed> $configuration
-     */
+    /** @param array<int, mixed> $configuration */
     private function isSingleListenerConfiguration(array $configuration): bool
     {
         return isset($configuration[0]) && is_string($configuration[0]);
     }
 
-    /**
-     * @param array<int, mixed> $configuration
-     */
+    /** @param array<int, mixed> $configuration */
     private function methodName(array $configuration): string
     {
         $methodName = $configuration[0] ?? null;
@@ -128,9 +118,7 @@ final class ListenerDefinitionResolver
         return $methodName;
     }
 
-    /**
-     * @param array<int, mixed> $configuration
-     */
+    /** @param array<int, mixed> $configuration */
     private function priority(array $configuration): int
     {
         $priority = $configuration[1] ?? 0;
@@ -142,9 +130,7 @@ final class ListenerDefinitionResolver
         return $priority;
     }
 
-    /**
-     * @return list<ListenerDefinition>
-     */
+    /** @return list<ListenerDefinition> */
     private function resolveAttributeDefinitions(object $service): array
     {
         $reflectionClass = new \ReflectionClass($service);
@@ -184,9 +170,7 @@ final class ListenerDefinitionResolver
         return $definitions;
     }
 
-    /**
-     * @return list<ListenerDefinition>
-     */
+    /** @return list<ListenerDefinition> */
     private function definitionsFromMethodAttribute(
         \ReflectionMethod $reflectionMethod,
         AsEventListener $attribute,
@@ -272,9 +256,7 @@ final class ListenerDefinitionResolver
         return $attributes;
     }
 
-    /**
-     * @return list<ListenerDefinition>
-     */
+    /** @return list<ListenerDefinition> */
     private function definitionsFromMethodAttributes(\ReflectionMethod $reflectionMethod): array
     {
         $definitions = [];
@@ -288,9 +270,7 @@ final class ListenerDefinitionResolver
         return $definitions;
     }
 
-    /**
-     * @return list<AsEventListener>
-     */
+    /** @return list<AsEventListener> */
     private function methodAttributes(\ReflectionMethod $reflectionMethod): array
     {
         $attributes = [];
@@ -304,9 +284,7 @@ final class ListenerDefinitionResolver
         return $attributes;
     }
 
-    /**
-     * @param \ReflectionClass<object> $reflectionClass
-     */
+    /** @param \ReflectionClass<object> $reflectionClass */
     private function classAttributeMethodName(
         \ReflectionClass $reflectionClass,
         AbstractListenerAttribute $attribute,
@@ -348,9 +326,7 @@ final class ListenerDefinitionResolver
         );
     }
 
-    /**
-     * @return list<string>
-     */
+    /** @return list<string> */
     private function eventNames(
         \ReflectionMethod $reflectionMethod,
         AbstractListenerAttribute $attribute,
@@ -389,9 +365,7 @@ final class ListenerDefinitionResolver
         );
     }
 
-    /**
-     * @return list<string>
-     */
+    /** @return list<string> */
     private function eventNamesFromUnionType(\ReflectionUnionType $eventType): array
     {
         $eventNames = [];
