@@ -12,14 +12,14 @@
     ],
     "require": {
         "php": "^8.5",
-        "sympress/kernel": "@dev",
+        "sympress/kernel": "dev-main",
         "psr/event-dispatcher": "^1.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^10.5",
         "phpstan/phpstan": "^2.1",
         "friendsofphp/php-cs-fixer": "^3.88",
-        "sympress/coding-standards": "@dev",
+        "sympress/coding-standards": "dev-main",
         "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
         "symfony/var-dumper": "^7"
     },
