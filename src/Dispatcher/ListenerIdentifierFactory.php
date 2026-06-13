@@ -17,22 +17,14 @@ final class ListenerIdentifierFactory
         }
 
         if (is_array($listener)) {
-            $target = $listener[0] ?? null;
-            $method = $listener[1] ?? null;
-
-            if (!is_string($method) || $method === '') {
-                throw new \InvalidArgumentException(
-                    'Listener array callbacks must define a method name.',
-                );
-            }
+            $target = $listener[0];
+            $method = $listener[1];
 
             if (is_object($target)) {
                 return spl_object_hash($target) . '::' . $method;
             }
 
-            if (is_string($target) && $target !== '') {
-                return $target . '::' . $method;
-            }
+            return $target . '::' . $method;
         }
 
         if (is_object($listener)) {
