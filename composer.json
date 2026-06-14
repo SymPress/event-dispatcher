@@ -21,7 +21,7 @@
         "friendsofphp/php-cs-fixer": "^3.88",
         "sympress/coding-standards": "dev-main",
         "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
-        "symfony/var-dumper": "^7"
+        "symfony/var-dumper": "^8.1"
     },
     "autoload": {
         "psr-4": {
