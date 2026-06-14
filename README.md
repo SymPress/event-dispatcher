@@ -1,5 +1,7 @@
 # Event Dispatcher
 
+[![Checks](https://img.shields.io/github/actions/workflow/status/SymPress/event-dispatcher/qa.yml?branch=main&label=checks)](https://github.com/SymPress/event-dispatcher/actions/workflows/qa.yml) [![Release](https://img.shields.io/packagist/v/sympress/event-dispatcher.svg?label=release)](https://packagist.org/packages/sympress/event-dispatcher) [![PHP](https://img.shields.io/packagist/dependency-v/sympress/event-dispatcher/php.svg?label=php)](https://packagist.org/packages/sympress/event-dispatcher) [![Downloads](https://img.shields.io/packagist/dt/sympress/event-dispatcher.svg?label=downloads)](https://packagist.org/packages/sympress/event-dispatcher/stats) [![License: GPL-2.0-or-later](https://img.shields.io/badge/license-GPL--2.0--or--later-blue.svg)](LICENSE)
+
 Standalone WordPress MU-plugin for Symfony-style class-based events, listeners, and subscribers on top of native WordPress hooks and filters.
 
 ## Requirements
