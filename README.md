@@ -378,9 +378,7 @@ add_action(
 ## Development
 
 ```bash
-composer test
-composer cs:analyze
-composer cs
+composer qa
 ```
 
 ## License
