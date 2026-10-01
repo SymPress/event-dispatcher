@@ -130,10 +130,6 @@ final class HookEventDispatcher implements ListenerRegistryInterface
             return;
         }
 
-        if (isset($this->registeredHookEvents[$eventName])) {
-            return;
-        }
-
         $this->assertValidHookEvent($eventName);
         $hook = $eventName::hookName();
         $fired = $eventName::hookType() === HookType::Action
@@ -145,6 +141,9 @@ final class HookEventDispatcher implements ListenerRegistryInterface
         ];
         if (($fired || $running) && in_array($hook, $bootstrapHooks, true)) {
             throw new InvalidHookEvent('Cannot register a listener after its bootstrap hook has started.');
+        }
+        if (isset($this->registeredHookEvents[$eventName])) {
+            return;
         }
         if ($fired && function_exists('_doing_it_wrong')) {
             _doing_it_wrong(

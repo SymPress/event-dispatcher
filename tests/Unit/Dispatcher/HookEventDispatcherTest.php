@@ -63,6 +63,21 @@ final class HookEventDispatcherTest extends TestCase
         }
     }
 
+    public function testExistingNativeCallbackDoesNotAllowAnotherLateBootstrapListener(): void
+    {
+        $dispatcher = EventSystem::getInstance()->getDispatcher();
+        $event = \SymPress\EventDispatcher\Tests\Support\InitEvent::class;
+        $dispatcher->addListener($event, static fn (object $value): object => $value);
+        do_action('init');
+        try {
+            $dispatcher->addListener($event, static fn (object $value): object => $value);
+            self::fail('Existing native callback accepted a late listener.');
+        } catch (\SymPress\EventDispatcher\Exception\InvalidHookEvent) {
+            self::assertCount(1, $dispatcher->getListeners($event));
+            self::assertSame([$event], $dispatcher->registeredHookEvents());
+        }
+    }
+
     public function test_it_registers_filter_events_only_once_and_returns_the_immutable_result(): void
     {
         $dispatcher = EventSystem::getInstance()->getDispatcher();
