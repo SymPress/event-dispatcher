@@ -60,15 +60,6 @@
             "phpstan/extension-installer": true
         }
     },
-    "repositories": [
-        {
-            "type": "path",
-            "url": "./../*",
-            "options": {
-                "symlink": true
-            }
-        }
-    ],
     "extra": {
         "wordpress-install-dir": "vendor/wordpress/wordpress",
         "kernel": {
