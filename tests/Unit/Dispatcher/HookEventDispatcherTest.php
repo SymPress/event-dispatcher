@@ -50,6 +50,20 @@ final class HookEventDispatcherTest extends TestCase
         self::assertSame(['2:1', '3:0'], $subscriber->actions);
     }
 
+    public function testAnotherLateRepeatableListenerReportsMissedInvocationAndRunsOnFutureHooks(): void
+    {
+        $dispatcher = EventSystem::getInstance()->getDispatcher();
+        $first = new HookSubscriber();
+        $second = new HookSubscriber();
+        $dispatcher->register($first);
+        do_action('save_post', 1, false);
+        $dispatcher->register($second);
+        self::assertCount(1, HookState::$warnings);
+        do_action('save_post', 2, true);
+        self::assertSame(['1:0', '2:1'], $first->actions);
+        self::assertSame(['2:1'], $second->actions);
+    }
+
     public function testLateBootstrapListenerIsRejectedBeforeRegistration(): void
     {
         do_action('init');

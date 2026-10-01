@@ -142,15 +142,15 @@ final class HookEventDispatcher implements ListenerRegistryInterface
         if (($fired || $running) && in_array($hook, $bootstrapHooks, true)) {
             throw new InvalidHookEvent('Cannot register a listener after its bootstrap hook has started.');
         }
-        if (isset($this->registeredHookEvents[$eventName])) {
-            return;
-        }
         if ($fired && function_exists('_doing_it_wrong')) {
             _doing_it_wrong(
                 __METHOD__,
                 'This listener missed an earlier hook invocation; only future invocations will be observed.',
                 '1.0',
             );
+        }
+        if (isset($this->registeredHookEvents[$eventName])) {
+            return;
         }
         $callback = $this->createHookCallback($eventName);
 
