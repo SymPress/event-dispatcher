@@ -12,10 +12,18 @@ namespace SymPress\EventDispatcher\Tests\Support {
         /** @var list<string> */
         public static array $currentFilters = [];
 
+        /** @var array<string, int> */
+        public static array $counts = [];
+
+        /** @var list<string> */
+        public static array $warnings = [];
+
         public static function reset(): void
         {
             self::$hooks = [];
             self::$currentFilters = [];
+            self::$counts = [];
+            self::$warnings = [];
         }
     }
 }
@@ -116,6 +124,7 @@ namespace {
     if (!function_exists('do_action')) {
         function do_action(string $hook, mixed ...$args): void
         {
+            HookState::$counts[$hook] = (HookState::$counts[$hook] ?? 0) + 1;
             $callbacksByPriority = HookState::$hooks[$hook] ?? [];
 
             if ($callbacksByPriority === []) {
@@ -143,6 +152,7 @@ namespace {
     if (!function_exists('apply_filters')) {
         function apply_filters(string $hook, mixed $value, mixed ...$args): mixed
         {
+            HookState::$counts[$hook] = (HookState::$counts[$hook] ?? 0) + 1;
             $callbacksByPriority = HookState::$hooks[$hook] ?? [];
 
             if ($callbacksByPriority === []) {
@@ -166,6 +176,23 @@ namespace {
             }
 
             return $value;
+        }
+    }
+
+    if (!function_exists('did_action')) {
+        function did_action(string $hook): int { return HookState::$counts[$hook] ?? 0; }
+    }
+    if (!function_exists('did_filter')) {
+        function did_filter(string $hook): int { return HookState::$counts[$hook] ?? 0; }
+    }
+    if (!function_exists('doing_action')) {
+        function doing_action(string $hook): bool { return in_array($hook, HookState::$currentFilters, true); }
+    }
+    if (!function_exists('_doing_it_wrong')) {
+        function _doing_it_wrong(string $function, string $message, string $version): void
+        {
+            unset($function, $version);
+            HookState::$warnings[] = $message;
         }
     }
 

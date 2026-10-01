@@ -384,3 +384,19 @@ composer qa
 ## License
 
 This package is licensed under `GPL-2.0-or-later`.
+
+## Compiled listener lifecycle
+
+Autoconfigured AsEventListener/AsEventSubscriber services are resolved once during
+container compilation and registered through a lazy service locator before the
+EventSystem ready hook. Keep listeners private; their constructor runs on first
+matching dispatch. The manual register API remains supported and caches class
+attribute definitions rather than reflecting on every dispatch.
+
+Removing the last effective listener removes exactly the dispatcher's native WP
+callback and priority, preserving unrelated callbacks and inherited/interface
+listeners. Re-registration installs one callback. Already-started/completed
+bootstrap hooks (muplugins_loaded, plugins_loaded, setup_theme, after_setup_theme,
+init, wp_loaded) reject late listeners. Repeated actions/filters report missed
+invocations through _doing_it_wrong and observe future invocations only. Register
+bootstrap listeners before the relevant WordPress lifecycle boundary.

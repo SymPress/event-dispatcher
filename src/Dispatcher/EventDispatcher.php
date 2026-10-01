@@ -31,13 +31,17 @@ final class EventDispatcher implements ListenerRegistryInterface
     #[\Override]
     public function register(object $service): void
     {
+        $this->registerDefinitions($service, $this->listenerDefinitionResolver->resolve($service));
+    }
+
+    /** @param list<ListenerDefinition> $definitions */
+    public function registerDefinitions(object $service, array $definitions): void
+    {
         $serviceId = spl_object_hash($service);
 
         if (isset($this->serviceDefinitions[$serviceId])) {
             return;
         }
-
-        $definitions = $this->listenerDefinitionResolver->resolve($service);
 
         if ($definitions === [] && !$service instanceof EventSubscriberInterface) {
             throw new InvalidListenerConfiguration(

@@ -332,3 +332,10 @@ final class AttributedHookSubscriber
         return $event->withAllowed('webp', 'image/webp');
     }
 }
+
+final readonly class InitEvent extends AbstractActionEvent
+{
+    public static function hookName(): string { return 'init'; }
+    public static function acceptedArgs(): int { return 0; }
+    public static function fromHookArguments(array $arguments): static { return new self($arguments); }
+}
