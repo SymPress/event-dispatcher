@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace SymPress\EventDispatcher\Hook;
 
+use SymPress\EventDispatcher\Application\CompiledListeners;
 use SymPress\EventDispatcher\Application\EventSystem;
 
 final class EventSystemBootstrap
@@ -12,11 +13,13 @@ final class EventSystemBootstrap
 
     public function __construct(
         private readonly EventSystem $system,
+        private readonly ?CompiledListeners $listeners = null,
     ) {
     }
 
     public function initialize(): void
     {
+        $this->listeners?->register($this->system->getDispatcher());
         $this->system->init();
 
         if ($this->dispatched) {

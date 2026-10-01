@@ -14,6 +14,9 @@ use SymPress\EventDispatcher\Value\ListenerDefinition;
 
 final class ListenerDefinitionResolver
 {
+    /** @var array<class-string, list<ListenerDefinition>> */
+    private array $attributes = [];
+
     /** @return list<ListenerDefinition> */
     public function resolve(object $service): array
     {
@@ -133,17 +136,31 @@ final class ListenerDefinitionResolver
     /** @return list<ListenerDefinition> */
     private function resolveAttributeDefinitions(object $service): array
     {
-        $reflectionClass = new \ReflectionClass($service);
+        return $this->resolveClassAttributes($service::class);
+    }
+
+    /**
+     * @param class-string $class
+     * @return list<ListenerDefinition>
+     */
+    public function resolveClassAttributes(string $class): array
+    {
+        if (isset($this->attributes[$class])) {
+            return $this->attributes[$class];
+        }
+        $reflectionClass = new \ReflectionClass($class);
         $definitions = $this->classAttributeDefinitions(
             $reflectionClass,
             AsEventSubscriber::class,
         );
 
-        return array_merge(
+        $this->attributes[$class] = array_merge(
             $definitions,
             $this->classAttributeDefinitions($reflectionClass, AsEventListener::class),
             $this->methodAttributeDefinitions($reflectionClass),
         );
+
+        return $this->attributes[$class];
     }
 
     /**
@@ -396,11 +413,11 @@ final class ListenerDefinitionResolver
 
     private function assertPublicMethod(\ReflectionMethod $reflectionMethod): void
     {
-        if ($reflectionMethod->isPublic()) {
+        if ($reflectionMethod->isPublic() && !$reflectionMethod->isStatic()) {
             return;
         }
 
-        throw new InvalidListenerConfiguration('Attributed listener methods must be public.');
+        throw new InvalidListenerConfiguration('Attributed listener methods must be public instance methods.');
     }
 
     private function defaultMethodName(string $eventName): string

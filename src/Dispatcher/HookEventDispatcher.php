@@ -13,7 +13,7 @@ use SymPress\EventDispatcher\Exception\InvalidHookEvent;
 
 final class HookEventDispatcher implements ListenerRegistryInterface
 {
-    /** @var array<class-string<HookEventInterface>, true> */
+    /** @var array<class-string<HookEventInterface>, \Closure> */
     private array $registeredHookEvents = [];
 
     public function __construct(
@@ -26,30 +26,33 @@ final class HookEventDispatcher implements ListenerRegistryInterface
     #[\Override]
     public function register(object $service): void
     {
-        foreach ($this->listenerDefinitionResolver->resolve($service) as $definition) {
+        $definitions = $this->listenerDefinitionResolver->resolve($service);
+        foreach ($definitions as $definition) {
             $this->registerHookEvent($definition->eventName);
         }
 
-        $this->dispatcher->register($service);
+        $this->dispatcher->registerDefinitions($service, $definitions);
     }
 
     #[\Override]
     public function unregister(object $service): void
     {
         $this->dispatcher->unregister($service);
+        $this->removeUnusedHooks();
     }
 
     #[\Override]
     public function addListener(string $eventName, callable $listener, int $priority = 0): void
     {
-        $this->dispatcher->addListener($eventName, $listener, $priority);
         $this->registerHookEvent($eventName);
+        $this->dispatcher->addListener($eventName, $listener, $priority);
     }
 
     #[\Override]
     public function removeListener(string $eventName, callable $listener): void
     {
         $this->dispatcher->removeListener($eventName, $listener);
+        $this->removeUnusedHooks();
     }
 
     #[\Override]
@@ -132,6 +135,24 @@ final class HookEventDispatcher implements ListenerRegistryInterface
         }
 
         $this->assertValidHookEvent($eventName);
+        $hook = $eventName::hookName();
+        $fired = $eventName::hookType() === HookType::Action
+            ? function_exists('did_action') && did_action($hook) > 0
+            : function_exists('did_filter') && did_filter($hook) > 0;
+        $running = function_exists('doing_action') && doing_action($hook);
+        $bootstrapHooks = [
+            'muplugins_loaded', 'plugins_loaded', 'setup_theme', 'after_setup_theme', 'init', 'wp_loaded',
+        ];
+        if (($fired || $running) && in_array($hook, $bootstrapHooks, true)) {
+            throw new InvalidHookEvent('Cannot register a listener after its bootstrap hook has started.');
+        }
+        if ($fired && function_exists('_doing_it_wrong')) {
+            _doing_it_wrong(
+                __METHOD__,
+                'This listener missed an earlier hook invocation; only future invocations will be observed.',
+                '1.0',
+            );
+        }
         $callback = $this->createHookCallback($eventName);
 
         if ($eventName::hookType() === HookType::Action) {
@@ -142,7 +163,7 @@ final class HookEventDispatcher implements ListenerRegistryInterface
                 $eventName::acceptedArgs(),
             );
 
-            $this->registeredHookEvents[$eventName] = true;
+            $this->registeredHookEvents[$eventName] = $callback;
 
             return;
         }
@@ -154,7 +175,30 @@ final class HookEventDispatcher implements ListenerRegistryInterface
             $eventName::acceptedArgs(),
         );
 
-        $this->registeredHookEvents[$eventName] = true;
+        $this->registeredHookEvents[$eventName] = $callback;
+    }
+
+    private function removeUnusedHooks(): void
+    {
+        foreach ($this->registeredHookEvents as $class => $callback) {
+            $used = false;
+            foreach (array_keys($this->listenerProvider->getListeners()) as $type) {
+                if (is_string($type) && is_a($class, $type, true)) {
+                    $used = true;
+                    break;
+                }
+            }
+            if ($used) {
+                continue;
+            }
+            if ($class::hookType() === HookType::Action) {
+                remove_action($class::hookName(), $callback, $class::hookPriority());
+                unset($this->registeredHookEvents[$class]);
+                continue;
+            }
+            remove_filter($class::hookName(), $callback, $class::hookPriority());
+            unset($this->registeredHookEvents[$class]);
+        }
     }
 
     /** @param class-string<HookEventInterface> $eventClass */

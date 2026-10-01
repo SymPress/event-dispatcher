@@ -22,6 +22,47 @@ final class HookEventDispatcherTest extends TestCase
         EventSystem::reset();
     }
 
+    public function testRemovalDetachesOnlyOwnedCallbackAndReaddDispatchesOnce(): void
+    {
+        $dispatcher = EventSystem::getInstance()->getDispatcher();
+        $listener = static fn (AllowedMimeTypesEvent $event): AllowedMimeTypesEvent => $event->withAllowed('svg', 'image/svg+xml');
+        $unrelated = static fn (array $mimes): array => $mimes;
+        add_filter('upload_mimes', $unrelated);
+        $dispatcher->addListener(AllowedMimeTypesEvent::class, $listener);
+        self::assertCount(2, HookState::$hooks['upload_mimes'][10]);
+        $dispatcher->removeListener(AllowedMimeTypesEvent::class, $listener);
+        self::assertSame([], $dispatcher->registeredHookEvents());
+        self::assertCount(1, HookState::$hooks['upload_mimes'][10]);
+        $dispatcher->addListener(AllowedMimeTypesEvent::class, $listener);
+        $dispatcher->addListener(AllowedMimeTypesEvent::class, $listener);
+        self::assertCount(2, HookState::$hooks['upload_mimes'][10]);
+        self::assertSame(['svg' => 'image/svg+xml'], apply_filters('upload_mimes', []));
+    }
+
+    public function testLateRepeatedActionsWarnAndFutureExecutionsContinue(): void
+    {
+        do_action('save_post', 1, false);
+        $subscriber = new HookSubscriber();
+        EventSystem::getInstance()->getDispatcher()->register($subscriber);
+        self::assertCount(1, HookState::$warnings);
+        do_action('save_post', 2, true);
+        do_action('save_post', 3, false);
+        self::assertSame(['2:1', '3:0'], $subscriber->actions);
+    }
+
+    public function testLateBootstrapListenerIsRejectedBeforeRegistration(): void
+    {
+        do_action('init');
+        $dispatcher = EventSystem::getInstance()->getDispatcher();
+        try {
+            $dispatcher->addListener(\SymPress\EventDispatcher\Tests\Support\InitEvent::class, static fn (object $event): object => $event);
+            self::fail('Late init listener accepted.');
+        } catch (\SymPress\EventDispatcher\Exception\InvalidHookEvent) {
+            self::assertFalse($dispatcher->hasListeners());
+            self::assertSame([], $dispatcher->registeredHookEvents());
+        }
+    }
+
     public function test_it_registers_filter_events_only_once_and_returns_the_immutable_result(): void
     {
         $dispatcher = EventSystem::getInstance()->getDispatcher();
