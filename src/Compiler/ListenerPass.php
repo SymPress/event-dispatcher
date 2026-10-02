@@ -17,6 +17,9 @@ final class ListenerPass implements CompilerPassInterface
         $services = [];
         $listeners = [];
         foreach ($container->findTaggedServiceIds('sympress.event_listener') as $id => $tags) {
+            while ($container->hasAlias($id)) {
+                $id = (string) $container->getAlias($id);
+            }
             $services[$id] = new Reference($id);
             foreach ($tags as $tag) {
                 if (

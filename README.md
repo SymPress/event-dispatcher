@@ -397,6 +397,20 @@ Removing the last effective listener removes exactly the dispatcher's native WP
 callback and priority, preserving unrelated callbacks and inherited/interface
 listeners. Re-registration installs one callback. Already-started/completed
 bootstrap hooks (muplugins_loaded, plugins_loaded, setup_theme, after_setup_theme,
-init, wp_loaded) reject late listeners. Repeated actions/filters report missed
+init, wp_loaded) reject late listeners in debug mode and skip them in production. Repeated actions/filters report missed
 invocations through _doing_it_wrong and observe future invocations only. Register
 bootstrap listeners before the relevant WordPress lifecycle boundary.
+
+### Upgrade note
+
+Invalid hook definitions and already-started bootstrap hook registrations throw
+`InvalidHookEvent` only in debug mode. Production skips the invalid definition,
+reports `_doing_it_wrong` and continues valid definitions/services. Container
+construction uses `kernel.debug`; standalone construction follows `WP_DEBUG`.
+The dispatcher constructor and public service aliases remain unchanged.
+
+Compiled entries are deduplicated by canonical service ID, event and method.
+Registering the same container service manually (including through an alias)
+keeps its manual definitions authoritative; its lazy compiled entry will not
+invoke it again. Repeated automatic tags/initialization also dispatch once.
+Private automatic services stay lazy until a matching event is dispatched.
