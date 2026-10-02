@@ -20,6 +20,79 @@ final class HookEventDispatcherTest extends TestCase
 
         HookState::reset();
         EventSystem::reset();
+        EventSystem::getInstance()->getDispatcher()->configureDebug(true);
+    }
+
+    public function testProductionInvalidHookDoesNotPreventOtherListeners(): void
+    {
+        $dispatcher = EventSystem::getInstance()->getDispatcher();
+        $dispatcher->configureDebug(false);
+        do_action('init');
+        $dispatcher->addListener(\SymPress\EventDispatcher\Tests\Support\InitEvent::class, static fn (object $event): object => $event);
+        $subscriber = new HookSubscriber();
+        $dispatcher->register($subscriber);
+        do_action('save_post', 5, true);
+        self::assertSame(['5:1'], $subscriber->actions);
+        self::assertCount(1, HookState::$warnings);
+        self::assertNotContains(\SymPress\EventDispatcher\Tests\Support\InitEvent::class, $dispatcher->registeredHookEvents());
+    }
+
+    public function testCompiledServiceIdAndManualRegistrationDispatchOnceInEitherOrder(): void
+    {
+        foreach ([true, false] as $manualFirst) {
+            HookState::reset();
+            EventSystem::reset();
+            $dispatcher = EventSystem::getInstance()->getDispatcher();
+            $subscriber = new AttributedHookSubscriber();
+            if ($manualFirst) {
+                $dispatcher->register($subscriber);
+            }
+            $resolve = static fn (): object => $subscriber;
+            foreach (['subscriber', 'subscriber'] as $serviceId) {
+                $dispatcher->addCompiledListener($serviceId, \SymPress\EventDispatcher\Tests\Support\SavePostEvent::class, 'onSavePost', 0, $resolve);
+            }
+            if (!$manualFirst) {
+                $dispatcher->register($subscriber);
+            }
+            do_action('save_post', 42, true);
+            self::assertSame(['42:1'], $subscriber->actions);
+        }
+    }
+
+    public function testProductionSkipsInvalidDefinitionWithinTheSameSubscriber(): void
+    {
+        $dispatcher = EventSystem::getInstance()->getDispatcher();
+        $dispatcher->configureDebug(false);
+        do_action('init');
+        $subscriber = new class implements \SymPress\EventDispatcher\Contract\EventSubscriberInterface {
+            public int $calls = 0;
+            public static function getSubscribedEvents(): array
+            {
+                return [
+                    \SymPress\EventDispatcher\Tests\Support\InitEvent::class => 'listen',
+                    \SymPress\EventDispatcher\Tests\Support\SavePostEvent::class => 'listen',
+                ];
+            }
+            public function listen(object $event): void { $this->calls++; }
+        };
+        $dispatcher->register($subscriber);
+        do_action('save_post', 5, true);
+        self::assertSame(1, $subscriber->calls);
+        self::assertCount(1, HookState::$warnings);
+    }
+
+    public function testObjectsWithoutListenersStillFailInEveryMode(): void
+    {
+        $dispatcher = EventSystem::getInstance()->getDispatcher();
+        foreach ([true, false] as $debug) {
+            $dispatcher->configureDebug($debug);
+            try {
+                $dispatcher->register(new \stdClass());
+                self::fail('An object without listener definitions was registered.');
+            } catch (\SymPress\EventDispatcher\Exception\InvalidListenerConfiguration) {
+                self::assertFalse($dispatcher->hasListeners());
+            }
+        }
     }
 
     public function testRemovalDetachesOnlyOwnedCallbackAndReaddDispatchesOnce(): void

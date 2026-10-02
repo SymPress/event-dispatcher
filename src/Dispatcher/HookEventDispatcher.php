@@ -10,11 +10,39 @@ use SymPress\EventDispatcher\Contract\HookEventInterface;
 use SymPress\EventDispatcher\Contract\ListenerRegistryInterface;
 use SymPress\EventDispatcher\Event\HookType;
 use SymPress\EventDispatcher\Exception\InvalidHookEvent;
+use SymPress\EventDispatcher\Value\ListenerDefinition;
 
 final class HookEventDispatcher implements ListenerRegistryInterface
 {
     /** @var array<class-string<HookEventInterface>, \Closure> */
     private array $registeredHookEvents = [];
+
+    /** @var array<string, true> */
+    private array $compiledListeners = [];
+    private ?bool $debug = null;
+
+    public function configureDebug(bool $debug): void
+    {
+        $this->debug = $debug;
+    }
+
+    /** @param callable(): object $resolveService */
+    public function addCompiledListener(string $serviceId, string $eventName, string $method, int $priority, callable $resolveService): void
+    {
+        $key = $serviceId . ':' . $eventName . ':' . $method;
+        if (isset($this->compiledListeners[$key]) || !$this->registerHookEvent($eventName)) {
+            return;
+        }
+        $this->dispatcher->addListener($eventName, function (object $event) use ($resolveService, $method): mixed {
+            $service = $resolveService();
+            // The manual API owns its resolved methods when this service was also discovered automatically.
+            if ($this->dispatcher->isRegistered($service)) {
+                return null;
+            }
+            return $service->{$method}($event);
+        }, $priority);
+        $this->compiledListeners[$key] = true;
+    }
 
     public function __construct(
         private readonly EventDispatcher $dispatcher,
@@ -26,9 +54,14 @@ final class HookEventDispatcher implements ListenerRegistryInterface
     #[\Override]
     public function register(object $service): void
     {
-        $definitions = $this->listenerDefinitionResolver->resolve($service);
-        foreach ($definitions as $definition) {
-            $this->registerHookEvent($definition->eventName);
+        $resolved = $this->listenerDefinitionResolver->resolve($service);
+        $definitions = array_values(array_filter(
+            $resolved,
+            fn (ListenerDefinition $definition): bool => $this->registerHookEvent($definition->eventName),
+        ));
+
+        if ($definitions === [] && $resolved !== []) {
+            return;
         }
 
         $this->dispatcher->registerDefinitions($service, $definitions);
@@ -44,7 +77,9 @@ final class HookEventDispatcher implements ListenerRegistryInterface
     #[\Override]
     public function addListener(string $eventName, callable $listener, int $priority = 0): void
     {
-        $this->registerHookEvent($eventName);
+        if (!$this->registerHookEvent($eventName)) {
+            return;
+        }
         $this->dispatcher->addListener($eventName, $listener, $priority);
     }
 
@@ -124,13 +159,17 @@ final class HookEventDispatcher implements ListenerRegistryInterface
         return array_keys($this->registeredHookEvents);
     }
 
-    private function registerHookEvent(string $eventName): void
+    private function registerHookEvent(string $eventName): bool
     {
         if (!is_a($eventName, HookEventInterface::class, true)) {
-            return;
+            return true;
         }
 
-        $this->assertValidHookEvent($eventName);
+        try {
+            $this->assertValidHookEvent($eventName);
+        } catch (InvalidHookEvent $exception) {
+            return $this->invalidHook($exception);
+        }
         $hook = $eventName::hookName();
         $fired = $eventName::hookType() === HookType::Action
             ? function_exists('did_action') && did_action($hook) > 0
@@ -140,7 +179,8 @@ final class HookEventDispatcher implements ListenerRegistryInterface
             'muplugins_loaded', 'plugins_loaded', 'setup_theme', 'after_setup_theme', 'init', 'wp_loaded',
         ];
         if (($fired || $running) && in_array($hook, $bootstrapHooks, true)) {
-            throw new InvalidHookEvent('Cannot register a listener after its bootstrap hook has started.');
+            $message = 'Cannot register a listener after its bootstrap hook has started.';
+            return $this->invalidHook(new InvalidHookEvent($message));
         }
         if ($fired && function_exists('_doing_it_wrong')) {
             _doing_it_wrong(
@@ -150,7 +190,7 @@ final class HookEventDispatcher implements ListenerRegistryInterface
             );
         }
         if (isset($this->registeredHookEvents[$eventName])) {
-            return;
+            return true;
         }
         $callback = $this->createHookCallback($eventName);
 
@@ -164,7 +204,7 @@ final class HookEventDispatcher implements ListenerRegistryInterface
 
             $this->registeredHookEvents[$eventName] = $callback;
 
-            return;
+            return true;
         }
 
         add_filter(
@@ -175,6 +215,19 @@ final class HookEventDispatcher implements ListenerRegistryInterface
         );
 
         $this->registeredHookEvents[$eventName] = $callback;
+        return true;
+    }
+
+    private function invalidHook(InvalidHookEvent $exception): bool
+    {
+        if ($this->debug ?? (defined('WP_DEBUG') && (bool) constant('WP_DEBUG'))) {
+            throw $exception;
+        }
+        if (function_exists('_doing_it_wrong')) {
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Constant developer diagnostics are handled by WordPress.
+            _doing_it_wrong(__METHOD__, $exception->getMessage(), '1.0');
+        }
+        return false;
     }
 
     private function removeUnusedHooks(): void

@@ -22,10 +22,19 @@ final class CompiledListeners
             return;
         }
         foreach ($this->listeners as $entry) {
-            $dispatcher->addListener($entry['event'], function (object $event) use ($entry): mixed {
-                $service = $this->locator->get($entry['service']);
-                return $service->{$entry['method']}($event);
-            }, $entry['priority']);
+            $dispatcher->addCompiledListener(
+                $entry['service'],
+                $entry['event'],
+                $entry['method'],
+                $entry['priority'],
+                function () use ($entry): object {
+                    $service = $this->locator->get($entry['service']);
+                    if (!is_object($service)) {
+                        throw new \UnexpectedValueException('Compiled listeners must resolve to a service object.');
+                    }
+                    return $service;
+                },
+            );
         }
         $this->registered = true;
     }

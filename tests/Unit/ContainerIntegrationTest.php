@@ -21,6 +21,7 @@ final class ContainerIntegrationTest extends TestCase
         HookState::reset();
         EventSystem::reset();
         $container = new ContainerBuilder();
+        $container->setParameter('kernel.debug', false);
         (new EventDispatcherBundle())->build($container);
         (new YamlFileLoader($container, new FileLocator(dirname(__DIR__, 2) . '/Resources/config')))->load('services.yaml');
         $container->register(AttributedHookSubscriber::class, AttributedHookSubscriber::class)->setAutoconfigured(true)->setPublic(true);

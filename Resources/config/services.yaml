@@ -11,6 +11,8 @@ services:
     SymPress\EventDispatcher\Dispatcher\HookEventDispatcher:
         factory: ['@SymPress\EventDispatcher\Application\EventSystem', 'getDispatcher']
         public: true
+        calls:
+            - [configureDebug, ['%kernel.debug%']]
 
     SymPress\EventDispatcher\Contract\EventDispatcherInterface:
         alias: SymPress\EventDispatcher\Dispatcher\HookEventDispatcher
