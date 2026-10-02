@@ -333,6 +333,23 @@ final class AttributedHookSubscriber
     }
 }
 
+final class MixedRegistrationSubscriber
+{
+    /** @var list<string> */
+    public array $calls = [];
+
+    #[AsEventListener(priority: 100)]
+    public function onManualSave(SavePostEvent $event): void
+    {
+        $this->calls[] = 'manual:' . $event->postId;
+    }
+
+    public function onCompiledSave(SavePostEvent $event): void
+    {
+        $this->calls[] = 'compiled:' . $event->postId;
+    }
+}
+
 final readonly class InitEvent extends AbstractActionEvent
 {
     public static function hookName(): string { return 'init'; }

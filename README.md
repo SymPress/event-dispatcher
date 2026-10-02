@@ -411,6 +411,7 @@ The dispatcher constructor and public service aliases remain unchanged.
 
 Compiled entries are deduplicated by canonical service ID, event and method.
 Registering the same container service manually (including through an alias)
-keeps its manual definitions authoritative; its lazy compiled entry will not
-invoke it again. Repeated automatic tags/initialization also dispatch once.
+keeps each matching manual event/method authoritative; its matching lazy compiled
+entry will not invoke it again. Distinct explicitly tagged methods/events on that
+service remain active. Repeated automatic tags/initialization also dispatch once.
 Private automatic services stay lazy until a matching event is dispatched.

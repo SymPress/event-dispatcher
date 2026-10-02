@@ -67,9 +67,14 @@ final class EventDispatcher implements ListenerRegistryInterface
         $this->serviceDefinitions[$serviceId] = $definitions;
     }
 
-    public function isRegistered(object $service): bool
+    public function hasRegisteredListener(object $service, string $eventName, string $method): bool
     {
-        return isset($this->serviceDefinitions[spl_object_hash($service)]);
+        foreach ($this->serviceDefinitions[spl_object_hash($service)] ?? [] as $definition) {
+            if ($definition->eventName === $eventName && $definition->methodName === $method) {
+                return true;
+            }
+        }
+        return false;
     }
 
     #[\Override]

@@ -33,10 +33,10 @@ final class HookEventDispatcher implements ListenerRegistryInterface
         if (isset($this->compiledListeners[$key]) || !$this->registerHookEvent($eventName)) {
             return;
         }
-        $this->dispatcher->addListener($eventName, function (object $event) use ($resolveService, $method): mixed {
+        $this->dispatcher->addListener($eventName, function (object $event) use ($resolveService, $eventName, $method): mixed {
             $service = $resolveService();
-            // The manual API owns its resolved methods when this service was also discovered automatically.
-            if ($this->dispatcher->isRegistered($service)) {
+            // Suppress only the same resolved listener; distinct explicit tags remain active.
+            if ($this->dispatcher->hasRegisteredListener($service, $eventName, $method)) {
                 return null;
             }
             return $service->{$method}($event);
