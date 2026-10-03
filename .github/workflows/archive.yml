@@ -19,8 +19,18 @@ permissions:
 
 jobs:
   archive:
+    permissions:
+      contents: read
+      actions: read
+      attestations: write
+      id-token: write
     uses: sympress/workflows/.github/workflows/wordpress-archive.yml@78d083a9a0176cf0252318b0c69fc64938a727d6
     with:
+      artifact_extra_excludes: >-
+        /tests /docs /AGENTS.md /CONTRIBUTING.md /qa-adoption.json
+        /phpcs.xml /phpcs.xml.dist /phpstan.neon /phpstan.neon.dist
+        /phpunit*.xml* /.php-cs-fixer* /.gitignore /.gitattributes
+        /composer.review*.json /composer.review*.lock
       main_file: event-dispatcher.php
       package_version: ${{ github.event.inputs.version }}
     secrets:
