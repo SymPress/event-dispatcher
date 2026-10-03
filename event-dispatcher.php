@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Event Dispatcher
  * Description: Symfony-style class-based event dispatcher for native WordPress hooks and filters.
- * Version: 1.0.0
+ * Version: 1.0.5
  * Requires at least: 6.9
  * Requires PHP: 8.5
  * Author: Brian Schaeffner
