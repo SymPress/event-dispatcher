@@ -406,7 +406,10 @@ bootstrap listeners before the relevant WordPress lifecycle boundary.
 Invalid hook definitions and already-started bootstrap hook registrations throw
 `InvalidHookEvent` only in debug mode. Production skips the invalid definition,
 reports `_doing_it_wrong` and continues valid definitions/services. Container
-construction uses `kernel.debug`; standalone construction follows `WP_DEBUG`.
+bootstrap applies `kernel.debug` to the singleton before compiled registrations
+and ready hooks, even when the public dispatcher service is never fetched.
+Standalone construction defaults to production behavior; call `configureDebug(true)`
+explicitly when debug exceptions are wanted. `WP_DEBUG` alone does not enable them.
 The dispatcher constructor and public service aliases remain unchanged.
 
 Compiled entries are deduplicated by canonical service ID, event and method.

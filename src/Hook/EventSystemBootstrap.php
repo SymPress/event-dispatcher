@@ -14,11 +14,13 @@ final class EventSystemBootstrap
     public function __construct(
         private readonly EventSystem $system,
         private readonly ?CompiledListeners $listeners = null,
+        private readonly bool $debug = false,
     ) {
     }
 
     public function initialize(): void
     {
+        $this->system->getDispatcher()->configureDebug($this->debug);
         $this->listeners?->register($this->system->getDispatcher());
         $this->system->init();
 
