@@ -19,7 +19,7 @@ final class HookEventDispatcher implements ListenerRegistryInterface
 
     /** @var array<string, true> */
     private array $compiledListeners = [];
-    private ?bool $debug = null;
+    private bool $debug = false;
 
     public function configureDebug(bool $debug): void
     {
@@ -220,7 +220,7 @@ final class HookEventDispatcher implements ListenerRegistryInterface
 
     private function invalidHook(InvalidHookEvent $exception): bool
     {
-        if ($this->debug ?? (defined('WP_DEBUG') && (bool) constant('WP_DEBUG'))) {
+        if ($this->debug) {
             throw $exception;
         }
         if (function_exists('_doing_it_wrong')) {

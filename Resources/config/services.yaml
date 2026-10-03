@@ -31,5 +31,7 @@ services:
         public: true
 
     SymPress\EventDispatcher\Hook\EventSystemBootstrap:
+        arguments:
+            $debug: '%kernel.debug%'
         tags:
             - { name: kernel.hook, hook: 'muplugins_loaded', method: initialize, priority: 1 }
