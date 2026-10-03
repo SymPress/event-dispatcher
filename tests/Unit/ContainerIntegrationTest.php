@@ -18,6 +18,19 @@ use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 
 final class ContainerIntegrationTest extends TestCase
 {
+    #[\PHPUnit\Framework\Attributes\RunInSeparateProcess]
+    #[\PHPUnit\Framework\Attributes\PreserveGlobalState(false)]
+    public function testWordPressDebugDoesNotEnableStandaloneBootstrapExceptions(): void
+    {
+        define('WP_DEBUG', true);
+        HookState::reset();
+        EventSystem::reset();
+        $dispatcher = EventSystem::getInstance()->getDispatcher();
+        $dispatcher->addListener(InvalidBootstrapEvent::class, static fn (): null => null);
+        self::assertCount(1, HookState::$warnings);
+        self::assertFalse($dispatcher->hasListeners(InvalidBootstrapEvent::class));
+    }
+
     #[\PHPUnit\Framework\Attributes\DataProvider('debugModes')]
     public function testBootstrapConfiguresSingletonBeforeDispatcherServiceIsFetched(bool $debug): void
     {
