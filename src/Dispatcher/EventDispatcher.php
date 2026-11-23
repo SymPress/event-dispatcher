@@ -12,8 +12,8 @@ use SymPress\EventDispatcher\Value\ListenerDefinition;
 
 final class EventDispatcher implements ListenerRegistryInterface
 {
-    /** @var array<string, list<ListenerDefinition>> */
-    private array $serviceDefinitions = [];
+    /** @var \WeakMap<object, list<ListenerDefinition>> Weak keys: a freed service cannot shadow a new one. */
+    private readonly \WeakMap $serviceDefinitions;
 
     private readonly ListenerProvider $listenerProvider;
     private readonly ListenerDefinitionResolver $listenerDefinitionResolver;
@@ -23,6 +23,7 @@ final class EventDispatcher implements ListenerRegistryInterface
         ?ListenerDefinitionResolver $listenerDefinitionResolver = null,
     ) {
 
+        $this->serviceDefinitions = new \WeakMap();
         $this->listenerProvider = $listenerProvider ?? new ListenerProvider();
         $this->listenerDefinitionResolver = $listenerDefinitionResolver
             ?? new ListenerDefinitionResolver();
@@ -37,9 +38,7 @@ final class EventDispatcher implements ListenerRegistryInterface
     /** @param list<ListenerDefinition> $definitions */
     public function registerDefinitions(object $service, array $definitions): void
     {
-        $serviceId = spl_object_hash($service);
-
-        if (isset($this->serviceDefinitions[$serviceId])) {
+        if (isset($this->serviceDefinitions[$service])) {
             return;
         }
 
@@ -64,12 +63,12 @@ final class EventDispatcher implements ListenerRegistryInterface
             );
         }
 
-        $this->serviceDefinitions[$serviceId] = $definitions;
+        $this->serviceDefinitions[$service] = $definitions;
     }
 
     public function hasRegisteredListener(object $service, string $eventName, string $method): bool
     {
-        foreach ($this->serviceDefinitions[spl_object_hash($service)] ?? [] as $definition) {
+        foreach ($this->serviceDefinitions[$service] ?? [] as $definition) {
             if ($definition->eventName === $eventName && $definition->methodName === $method) {
                 return true;
             }
@@ -80,8 +79,7 @@ final class EventDispatcher implements ListenerRegistryInterface
     #[\Override]
     public function unregister(object $service): void
     {
-        $serviceId = spl_object_hash($service);
-        $definitions = $this->serviceDefinitions[$serviceId] ?? [];
+        $definitions = $this->serviceDefinitions[$service] ?? [];
 
         foreach ($definitions as $definition) {
             $listener = [$service, $definition->methodName];
@@ -96,7 +94,7 @@ final class EventDispatcher implements ListenerRegistryInterface
             );
         }
 
-        unset($this->serviceDefinitions[$serviceId]);
+        unset($this->serviceDefinitions[$service]);
     }
 
     #[\Override]
