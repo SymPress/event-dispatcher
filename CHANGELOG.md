@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 where applicable.
 
+## 1.0.7 — Unreleased
+
+- Fix: listeners typed with an abstract hook event (`AbstractActionEvent`, `AbstractFilterEvent`, `HookEventInterface`) no longer throw `Cannot call abstract method …::hookName()` on every request; they receive the concrete events whose hooks other listeners register.
+- Fix: track registered services by object identity, so a subscriber can no longer be skipped because it reuses the object ID of a freed subscriber without events.
+- Dependencies: require `symfony/dependency-injection` and `psr/container` directly; both were only installed through `sympress/kernel`.
+- Docs: README examples allow AVIF instead of unsanitized SVG uploads, the installation section describes kernel discovery, and the German filter section is translated. Add `SECURITY.md` and this changelog.
+- CI: pin `sympress/workflows` to v1.3.2 and let Dependabot update GitHub Actions pins.
+
 ## 1.0.6 — 2026-11-06
 
 - Dependencies: apply the November Symfony security updates and the PHPUnit advisory fix; commit the Composer lock file.
