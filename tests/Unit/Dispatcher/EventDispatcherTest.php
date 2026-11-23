@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace SymPress\EventDispatcher\Tests\Unit\Dispatcher;
 
+use SymPress\EventDispatcher\Contract\EventSubscriberInterface;
 use SymPress\EventDispatcher\Dispatcher\EventDispatcher;
 use SymPress\EventDispatcher\Exception\InvalidListenerConfiguration;
 use SymPress\EventDispatcher\Exception\InvalidSubscriberConfiguration;
@@ -134,6 +135,38 @@ final class EventDispatcherTest extends TestCase
         $this->expectException(InvalidListenerConfiguration::class);
 
         $dispatcher->register(new InvalidAttributedListener());
+    }
+
+    public function test_it_registers_a_subscriber_that_reuses_a_freed_empty_subscribers_object_id(): void
+    {
+        $dispatcher = new EventDispatcher();
+        $empty = new class implements EventSubscriberInterface {
+            public static function getSubscribedEvents(): array
+            {
+                return [];
+            }
+        };
+        $dispatcher->addSubscriber($empty);
+        unset($empty);
+
+        // Same object size, so PHP reuses the freed slot and its spl_object_hash().
+        $subscriber = new class implements EventSubscriberInterface {
+            public static int $calls = 0;
+
+            public static function getSubscribedEvents(): array
+            {
+                return [DemoEvent::class => 'onDemo'];
+            }
+
+            public function onDemo(DemoEvent $event): void
+            {
+                self::$calls++;
+            }
+        };
+        $dispatcher->addSubscriber($subscriber);
+        $dispatcher->dispatch(new DemoEvent());
+
+        self::assertSame(1, $subscriber::$calls);
     }
 
     public function test_it_rejects_non_psr14_listener_signatures(): void
