@@ -161,7 +161,8 @@ final class HookEventDispatcher implements ListenerRegistryInterface
 
     private function registerHookEvent(string $eventName): bool
     {
-        if (!is_a($eventName, HookEventInterface::class, true)) {
+        // Abstract types have no hook of their own; they receive their concrete subtypes' events.
+        if (!is_a($eventName, HookEventInterface::class, true) || (new \ReflectionClass($eventName))->isAbstract()) {
             return true;
         }
 

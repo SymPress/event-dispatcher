@@ -9,6 +9,10 @@ use SymPress\EventDispatcher\Tests\Support\AllowedMimeTypesEvent;
 use SymPress\EventDispatcher\Tests\Support\AttributedHookSubscriber;
 use SymPress\EventDispatcher\Tests\Support\HookState;
 use SymPress\EventDispatcher\Tests\Support\HookSubscriber;
+use SymPress\EventDispatcher\Tests\Support\SavePostEvent;
+use SymPress\EventDispatcher\Contract\HookEventInterface;
+use SymPress\EventDispatcher\Event\AbstractActionEvent;
+use SymPress\EventDispatcher\Event\AbstractFilterEvent;
 use PHPUnit\Framework\TestCase;
 
 final class HookEventDispatcherTest extends TestCase
@@ -35,6 +39,26 @@ final class HookEventDispatcherTest extends TestCase
         self::assertSame(['5:1'], $subscriber->actions);
         self::assertCount(1, HookState::$warnings);
         self::assertNotContains(\SymPress\EventDispatcher\Tests\Support\InitEvent::class, $dispatcher->registeredHookEvents());
+    }
+
+    public function testAbstractHookEventTypesReceiveConcreteHookEventsWithoutNativeHooks(): void
+    {
+        $dispatcher = EventSystem::getInstance()->getDispatcher();
+        $seen = [];
+        foreach ([HookEventInterface::class, AbstractActionEvent::class, AbstractFilterEvent::class] as $type) {
+            $dispatcher->addListener($type, static function (object $event) use (&$seen, $type): void {
+                $seen[] = $type . ':' . $event::class;
+            });
+        }
+        self::assertSame([], $dispatcher->registeredHookEvents());
+        self::assertSame([], HookState::$hooks);
+
+        $dispatcher->addListener(SavePostEvent::class, static fn (object $event): null => null);
+        do_action('save_post', 1, true);
+        self::assertSame([
+            HookEventInterface::class . ':' . SavePostEvent::class,
+            AbstractActionEvent::class . ':' . SavePostEvent::class,
+        ], $seen);
     }
 
     public function testCompiledServiceIdAndManualRegistrationDispatchOnceInEitherOrder(): void
