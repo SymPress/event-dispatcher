@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ab25c4aa0583d23236fbb48e77ce3ff4",
+    "content-hash": "3ed1c90c107625f103a16406cda0ccdd",
     "packages": [
         {
             "name": "psr/cache",
@@ -3908,7 +3908,8 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-10-24T11:36:00+00:00"
+            "time": "2026-10-24T11:36:00+00:00",
+            "published-time": "2026-10-24T11:36:12+00:00"
         },
         {
             "name": "phpstan/phpstan-deprecation-rules",
