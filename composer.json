@@ -12,8 +12,10 @@
     ],
     "require": {
         "php": "^8.5",
-        "sympress/kernel": "^1.1.1",
-        "psr/event-dispatcher": "^1.0"
+        "psr/container": "^2.0",
+        "psr/event-dispatcher": "^1.0",
+        "symfony/dependency-injection": "^8.1",
+        "sympress/kernel": "^1.1.1"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.88",
