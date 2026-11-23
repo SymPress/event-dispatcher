@@ -21,17 +21,16 @@ Standalone WordPress MU-plugin for Symfony-style class-based events, listeners, 
 
 ## Installation
 
-1. Place the package in `wp-content/mu-plugins/event-dispatcher/`.
-2. Ensure Composer autoloading is available.
-3. Add a root MU loader file because WordPress does not autoload subdirectories.
+Install the package through Composer in a SymPress WordPress project:
 
-```php
-<?php
-
-declare(strict_types=1);
-
-require WPMU_PLUGIN_DIR . '/event-dispatcher/event-dispatcher.php';
+```sh
+composer require sympress/event-dispatcher
 ```
+
+The SymPress kernel discovers the `SymPress\EventDispatcher\EventDispatcherBundle`
+bundle from `extra.kernel` in `composer.json` and loads
+`event-dispatcher/event-dispatcher.php` as the MU-plugin entry. The bundle
+initializes the event system when the kernel boots.
 
 ## Registering Subscribers
 
@@ -93,13 +92,13 @@ final class UploadSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents(): array
     {
         return [
-            UploadMimesEvent::class => ['allowSvg', 100],
+            UploadMimesEvent::class => ['allowAvif', 100],
         ];
     }
 
-    public function allowSvg(UploadMimesEvent $event): UploadMimesEvent
+    public function allowAvif(UploadMimesEvent $event): UploadMimesEvent
     {
-        return $event->withAllowed('svg', 'image/svg+xml');
+        return $event->withAllowed('avif', 'image/avif');
     }
 }
 
@@ -113,14 +112,12 @@ add_action(
 
 ## Filter Strategy
 
-Filter sind bereits implementiert.
+- The first native filter argument is the event payload.
+- Filter events are immutable value objects.
+- Listeners never mutate an event in place; to change data they return a new event instance.
+- The final event state is written back to the native WordPress filter through `toHookResult()`.
 
-- Das erste native Filter-Argument ist der Payload des Events.
-- Filter-Events sind immutable Value Objects.
-- Listener mutieren nie in-place, sondern geben bei Änderungen eine neue Event-Instanz zurück.
-- Der letzte Event-Stand wird über `toHookResult()` zurück in den nativen WordPress-Filter geschrieben.
-
-Kurz gesagt: `apply_filters()` bleibt nach außen WordPress-kompatibel, intern arbeitest du aber mit sauberen immutable Events.
+In short: `apply_filters()` stays WordPress-compatible on the outside, while listeners work with immutable events.
 
 ## Registering Attribute-Based Listeners
 
@@ -129,12 +126,12 @@ use SymPress\EventDispatcher\Application\EventSystem;
 use SymPress\EventDispatcher\Attribute\AsEventListener;
 use SymPress\EventDispatcher\Attribute\AsEventSubscriber;
 
-#[AsEventSubscriber(event: UploadMimesEvent::class, method: 'allowSvg', priority: 100)]
+#[AsEventSubscriber(event: UploadMimesEvent::class, method: 'allowAvif', priority: 100)]
 final class UploadListener
 {
-    public function allowSvg(UploadMimesEvent $event): UploadMimesEvent
+    public function allowAvif(UploadMimesEvent $event): UploadMimesEvent
     {
-        return $event->withAllowed('svg', 'image/svg+xml');
+        return $event->withAllowed('avif', 'image/avif');
     }
 
     #[AsEventListener(priority: 0)]
@@ -154,7 +151,7 @@ add_action(
 
 ## Use Cases
 
-### 1. WordPress Filter: MIME Types erweitern
+### 1. WordPress Filter: Extend Allowed MIME Types
 
 ```php
 use SymPress\EventDispatcher\Application\EventSystem;
@@ -216,8 +213,8 @@ add_action(
         $dispatcher->addListener(
             UploadMimesEvent::class,
             static fn (UploadMimesEvent $event): UploadMimesEvent => $event->withAllowed(
-                'svg',
-                'image/svg+xml',
+                'avif',
+                'image/avif',
             ),
             100,
         );
@@ -296,9 +293,9 @@ final class EditorialWorkflowListener
     }
 
     #[AsEventListener(priority: 100)]
-    public function allowSvg(UploadMimesEvent $event): UploadMimesEvent
+    public function allowAvif(UploadMimesEvent $event): UploadMimesEvent
     {
-        return $event->withAllowed('svg', 'image/svg+xml');
+        return $event->withAllowed('avif', 'image/avif');
     }
 }
 
@@ -373,6 +370,7 @@ add_action(
 - `AbstractActionEvent` maps native actions to typed event objects.
 - `AbstractFilterEvent` maps native filters to immutable event value objects; listeners return a new event instance when they change data.
 - Filter listeners should return the same event unchanged or a new event instance of the same class.
+- Listeners typed with `HookEventInterface`, `AbstractActionEvent`, `AbstractFilterEvent` or another abstract hook event register no native hook themselves; they receive the concrete events whose hooks are registered by other listeners.
 - Subscribers follow the Symfony event subscriber format.
 
 ## Development
